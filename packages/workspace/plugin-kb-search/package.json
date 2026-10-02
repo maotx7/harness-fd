@@ -1,0 +1,56 @@
+{
+  "name": "@workspace/plugin-kb-search",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    }
+  },
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "build": "tsc && ./node_modules/esbuild/bin/esbuild src/client.tsx --bundle --platform=browser --format=cjs --external:react --external:react/jsx-runtime --banner:js='window.__ModuleLoader__.load({ id: \"@workspace/plugin-kb-search\", factory: (require) => { var module = { exports: {} }; var exports = module.exports;' --footer:js='return module.exports; } });' --outfile=dist/client.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "4.0.4",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "3.18.4",
+    "@qdrant/js-client-rest": "^1.8.0",
+    "busboy": "^1.6.0",
+    "mammoth": "^1.13.0",
+    "minio": "^8.0.7",
+    "mysql2": "^3.6.5",
+    "pdf-parse": "1.1.1",
+    "word-extractor": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/busboy": "^1.5.4",
+    "@types/node": "^20.10.0",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^18.3.1",
+    "esbuild": "^0.25.0",
+    "lucide-react": "^0.468.0",
+    "react": "^18.2.0",
+    "typescript": "^5.3.3"
+  }
+}

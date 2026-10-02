@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=./cordis.schema.json
+# Workspace Enterprise Profile - Plugin Configuration
+# This patch extends the base DSH profile with custom business logic plugins.
+
+- insert:
+    - id: workspace-kb-search
+      name: '@workspace/plugin-kb-search'
+      config:
+        mysqlUrl: !!js process.env.MYSQL_URL
+        vectorDbUrl: !!js process.env.QDRANT_URL
+        embeddingBaseUrl: !!js process.env.EMBEDDING_BASE_URL
+        embeddingApiKey: !!js process.env.EMBEDDING_API_KEY
+        embeddingModel: !!js process.env.EMBEDDING_MODEL
+        embeddingDimension: !!js Number(process.env.EMBEDDING_DIMENSION)
+        vectorCollection: !!js process.env.QDRANT_COLLECTION || 'function_def_chunks'
+        storageBackend: !!js process.env.STORAGE_BACKEND || 'local'
+        minioEndpoint: !!js process.env.MINIO_ENDPOINT
+        minioAccessKey: !!js process.env.MINIO_ACCESS_KEY
+        minioSecretKey: !!js process.env.MINIO_SECRET_KEY
+        minioBucket: !!js process.env.MINIO_BUCKET
+        minioSecure: !!js process.env.MINIO_SECURE === 'true'
+
+    - id: workspace-signal-query
+      name: '@workspace/plugin-signal-query'
+      config:
+        mysqlUrl: !!js process.env.MYSQL_URL
+
+    - id: workspace-workflow-mgmt
+      name: '@workspace/plugin-workflow-mgmt'
+      config:
+        mysqlUrl: !!js process.env.MYSQL_URL
+        redisUrl: !!js process.env.REDIS_URL
+- id: ui-settings-general
+  name: '@deepseek-ai/dsh-client-ui-settings-general'
+  config:
+    welcomeNoticeVersion: 2026-09-28.1
+- id: skill-filesystem
+  config:
+    customSkillDirs:
+      - !!js process.cwd() + '/skills'
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-pro
+    reasoningEffort: high

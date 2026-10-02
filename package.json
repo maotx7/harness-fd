@@ -1,0 +1,32 @@
+{
+  "name": "dsh-fd-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DeepSeek Harness workspace for function-definition workflows",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "setup:dsh": "bash scripts/setup-dsh-profile.sh",
+    "dev:web": "bash scripts/start-dsh.sh --port 3081",
+    "build": "pnpm run -r build",
+    "test": "pnpm run -r test",
+    "lint": "eslint packages --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3",
+    "yaml": "2.9.1"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "latest",
+    "cardinal": "^2.1.1",
+    "cordis": "^3.0.0"
+  }
+}

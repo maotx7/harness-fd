@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "templates": {
+    "cockpit": {
+      "domain": "cockpit",
+      "template_id": "cockpit-reusable-feature-v1",
+      "display_name": "座舱域功能定义模板",
+      "path": "templates/cockpit/template.docx",
+      "template_type": "reusable_feature_chapter",
+      "source_kind": "extracted_and_sanitized",
+      "module_area_heading": "系统功能描述",
+      "module_heading_style": "Heading 3",
+      "section_heading_style": "Heading 3",
+      "module_section_headings": ["本功能涉及的法规内容", "功能逻辑架构图", "功能描述", "使能条件", "配置字", "触发条件", "执行输出", "HMI要求", "退出条件", "故障处理", "故障恢复", "相关信号"],
+      "aliases": ["座舱", "座舱域", "icc", "vpc", "infotainment"],
+      "fill_sections": ["相关信号", "故障处理", "故障恢复"],
+      "required_sections": ["功能描述", "使能条件", "触发条件", "执行输出", "HMI要求", "退出条件"],
+      "status": "active",
+      "notes": "用于 ICC、VPC、车机和座舱域功能定义；模板文件只提供公共文档结构和排版，并保留一个可复制的中性功能模块，不提供目标项目接口事实。"
+    },
+    "energy_management": {
+      "domain": "energy_management",
+      "template_id": "energy-management-reusable-feature-v1",
+      "display_name": "能量管理域功能定义模板",
+      "path": "templates/energy_management/template.docx",
+      "template_type": "reusable_feature_chapter",
+      "source_kind": "derived_and_sanitized",
+      "module_area_heading": "5. 功能定义",
+      "module_heading_style": "Heading 3",
+      "section_heading_style": "Heading 4",
+      "module_section_headings": ["概述", "框图", "接口", "HMI", "硬线信号", "CAN 信号", "LIN 信号", "变量/参数", "功能描述", "故障定义", "功能安全要求", "性能规范"],
+      "aliases": ["能量管理", "能量管理域", "能量模式", "模式控制", "动力能量管理"],
+      "fill_sections": ["接口", "故障定义"],
+      "required_sections": ["概述", "接口", "HMI", "CAN 信号", "变量/参数", "功能描述", "故障定义", "功能安全要求", "性能规范"],
+      "status": "active",
+      "notes": "基于能量模式控制功能定义提炼；适用于混动/增程能量模式、SOC平衡、模式记忆和动力能量策略等功能。"
+    },
+    "charging_control": {
+      "domain": "charging_control",
+      "template_id": "charging-control-reusable-feature-v1",
+      "display_name": "充电控制域功能定义模板",
+      "path": "templates/charging_control/template.docx",
+      "template_type": "reusable_feature_chapter",
+      "source_kind": "derived_and_sanitized",
+      "module_area_heading": "5. 功能定义",
+      "module_heading_style": "Heading 3",
+      "section_heading_style": "Heading 4",
+      "module_section_headings": ["概述", "框图", "接口", "HMI", "硬线信号", "4G/蓝牙信号", "CAN 信号", "LIN 信号", "变量/参数", "功能描述", "故障定义", "功能安全要求", "性能规范"],
+      "aliases": ["充电控制", "充电控制域", "远程充电", "充电", "充电与远控"],
+      "fill_sections": ["接口", "故障定义"],
+      "required_sections": ["概述", "接口", "HMI", "硬线信号", "4G/蓝牙信号", "CAN 信号", "LIN 信号", "变量/参数", "功能描述", "故障定义", "功能安全要求", "性能规范"],
+      "status": "active",
+      "notes": "基于远程充电控制功能定义提炼；适用于远程充电、预约充电、充电截止SOC、保温和私桩预约等功能。"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "src": "<任务目录>/inputs/template.docx",
+  "out": "<任务目录>/outputs/ICC（8295）项目_OTA升级和USB刷写功能定义_V1.0.docx",
+  "token_repl": [
+    ["VPC（8797）", "ICC（8295）"],
+    ["VPC（9797）", "ICC（8295）"],
+    ["VPC（ICC）", "ICC（8295）"],
+    ["VPC(ICC)", "ICC(8295)"],
+    ["BDCU_0x517", "VCU_PDCU_0x357"],
+    ["BDCU_RefrshModRestrntFctCmd", "VCU_RefrshModRestrntFctCmd"],
+    ["VDC_0x2F1: PiATWSBefore", "ZCU_BCM_0x2AE: BCM_AntithftSts"],
+    ["fromBDCU", "fromVCU_PDCU"],
+    ["Vehicle Processing Center 中央计算中心", "Integrated Cockpit Controller 集成座舱控制器"],
+    ["2026年9月4日", "2026年9月7日"],
+    ["VPC", "ICC"]
+  ],
+  "signals": {
+    "PwrMod": ["PwrMod", "低压电源状态", "0x0:OFF；0x1:ACC(Reserved)；0x2:IGN ON（前置条件：电源非OFF）"],
+    "BCM_AntithftSts": ["BCM_AntithftSts", "车身防盗状态", "0x1:预设防；0x2:设防（设防状态用于判断车上是否有人，控制OTA过程车机屏亮/灭）"],
+    "VehSpd": ["VehSpd", "车速信号", "采用两驱动轮算术平均值计算；条件检测中用于判断车辆是否安全停放"],
+    "OTAHVPwrMod": ["OTAHVPwrMod", "OTA高低压模式", "0x1:下载高压模式；0x3:高压1刷写模式；0x4:高压2(禁言)刷写模式（支持无KL15仅高压环境安装）"],
+    "VCU_RefrshModRestrntFctCmd": ["VCU_RefrshModRestrntFctCmd", "刷写模式抑制功能启动指令(fromVCU_PDCU)", "0x0:初始值；0x1:自动声光动抑制+安全抑制；0x2:自动声光动抑制；0x3:安全抑制"],
+    "VCU_InhibitFunCmdVld": ["VCU_InhibitFunCmdVld", "抑制指令有效标志", "-"],
+    "VCU_BOOT_FLG": ["VCU_BOOT_FLG", "整车bootloader标志位", "-"],
+    "ICCloginUID": ["ICCloginUID", "车端账户登录UID", "-"],
+    "IccWus": ["IccWus", "Wake Up Source of ICC", "0x0:NoWakeUpSource；0x1:WakedUpByNetwork；0x2:KL15On"],
+    "GearP": ["档位（车辆档位处于P档）", "车辆档位状态", "以ICC(8295)项目DBC为准（前置条件需处于P档）"]
+  },
+  "block_signals": {
+    "USB工程书写VPC（ICC）需求（格式化分区表及用户数据）": ["PwrMod", "GearP"],
+    "OTA包U盘刷写VPC（ICC）需求（不刷写用户数据分区）": ["PwrMod", "GearP"],
+    "VPC（ICC） OTA升级整体需求": ["PwrMod", "BCM_AntithftSts", "VehSpd", "OTAHVPwrMod", "ICCloginUID"],
+    "VPC（ICC） OTA预安装升级需求": ["PwrMod", "BCM_AntithftSts", "VehSpd", "OTAHVPwrMod"],
+    "VPC（ICC） OTA差分升级需求": ["PwrMod", "OTAHVPwrMod"],
+    "VPC（ICC） OTA流式升级需求": ["PwrMod", "BCM_AntithftSts", "OTAHVPwrMod"],
+    "VPC（ICC） OTA回滚需求": ["PwrMod", "VCU_BOOT_FLG"],
+    "整车功能抑制相关需求": ["VCU_RefrshModRestrntFctCmd", "VCU_InhibitFunCmdVld", "BCM_AntithftSts", "PwrMod"],
+    "集成需求": ["ICCloginUID", "IccWus"],
+    "权限和自启动需求": ["ICCloginUID"]
+  },
+  "fault_text": "升级包完整性/真实性校验失败：终止本次升级流程并提示“升级失败”，篡改或损坏的升级包不可被刷写；ICC自升级/OTA升级安装或刷写失败：支持重试（2次）后仍失败则自行回滚至升级前软件版本（回滚策略详见“OTA回滚需求”），并清除升级/预安装标记、保留用户数据分区不变；USB工程刷写失败：终止升级并提示升级失败，拔出U盘后主机可重启至FBL系统重新检测U盘进行刷写；OTA过程中下电/断电：重新上电后由DUM根据已安装成功文件标记断点续升或保持原状态运行，不影响整车其他功能。",
+  "recover_text": "升级失败回滚：ICC保持在升级前（A）版本运行，重启或重新上下电不发生切区；用户数据分区保持不变；USB升级失败后重启可重新进入FBL检测U盘重试；预安装/流式安装失败或用户下电后，下次上电DUM检测到电量/条件满足后继续安装或重试安装；进入/退出功能抑制状态在OTA全过程保持，连续收到“整车功能抑制=0x0:初始值”3帧后退出抑制、恢复正常功能。",
+  "change_record_date": "2026-09-07"
+}

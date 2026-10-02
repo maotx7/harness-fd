@@ -1,0 +1,4 @@
+interface:
+  display_name: "功能定义需求澄清"
+  short_description: "将简短需求补齐为可生成、可追溯的功能定义决策输入"
+  default_prompt: "使用 $func-def-clarify 判断当前功能定义还需要哪些人工决策，并给出有依据的动态选项。"

@@ -1,0 +1,69 @@
+.DS_Store
+Thumbs.db
+
+# Local documentation and source reference corpus
+/docs/
+/files/
+*.docx
+# Environment variables
+.env
+.env.local
+.env.*
+*.env
+!.env.example
+!**/.env.example
+
+# DeepSeek Harness local runtime (source profiles live in /profiles)
+/.dsh/
+/node_modules/
+
+bots/*/.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# Build and packaging output
+dist/
+build/
+*.tsbuildinfo
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE and editor files
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Databases, logs, and generated storage
+*.db
+*.sqlite
+*.sqlite3
+*.log
+logs/
+storage/
+uploads/
+outputs/
+runtime/
+
+# Test and tool caches
+.pytest_cache/
+.pytest-cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

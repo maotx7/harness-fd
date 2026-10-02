@@ -1,0 +1,4 @@
+interface:
+  display_name: "功能定义控制器架构图"
+  short_description: "从功能定义和信号证据生成可核验的控制器交互 SVG"
+  default_prompt: "使用 $func-def-architecture 根据当前功能定义和已核验信号生成控制器交互架构图；缺失或冲突关系请标成待确认，不要猜测。"
