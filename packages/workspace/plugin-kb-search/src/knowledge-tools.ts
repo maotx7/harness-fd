@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { Context } from '@deepseek-ai/cordis'
-import type { QdrantClient } from '@qdrant/js-client-rest'
-import type mysql from 'mysql2/promise'
+import type { SqlitePool, RowDataPacket } from './sqlite-db.js'
+import type { SqliteVectorStore } from './sqlite-vector-store.js'
+import { DEFAULT_WORKSPACE_ID } from './workspace.js'
 
 interface KnowledgeConfig {
   vectorCollection: string
@@ -9,8 +10,8 @@ interface KnowledgeConfig {
 }
 
 interface KnowledgeDependencies {
-  db: () => mysql.Pool
-  qdrant: () => QdrantClient
+  db: () => SqlitePool
+  qdrant: () => SqliteVectorStore
   embed: (texts: string[]) => Promise<number[][]>
 }
 
@@ -71,27 +72,32 @@ export function registerKnowledgeTools(
       const result: any = {
         healthy: true,
         embedding: { configured: config.embeddingDimension > 0, dimension: config.embeddingDimension },
-        mysql: { healthy: false },
-        qdrant: { healthy: false, collection: config.vectorCollection }
+        sqlite: { healthy: false },
+        vector_store: { healthy: false, collection: config.vectorCollection }
       }
       try {
-        await dependencies.db().query('SELECT 1')
-        result.mysql.healthy = true
+        await dependencies.db().execute('SELECT 1')
+        result.sqlite.healthy = true
       } catch (error) {
         result.healthy = false
-        result.mysql.error = message(error)
+        result.sqlite.error = message(error)
       }
       try {
-        const info: any = await dependencies.qdrant().getCollection(config.vectorCollection)
-        result.qdrant = {
-          healthy: true,
-          collection: config.vectorCollection,
-          status: info.status,
-          points: info.points_count ?? info.indexed_vectors_count ?? 0
+        const info = await dependencies.qdrant().collectionExists(config.vectorCollection)
+        if (info.exists) {
+          const collectionInfo = await dependencies.qdrant().getCollection(config.vectorCollection)
+          result.vector_store = {
+            healthy: true,
+            collection: config.vectorCollection,
+            status: 'active'
+          }
+        } else {
+          result.vector_store.healthy = false
+          result.vector_store.error = 'Collection does not exist'
         }
       } catch (error) {
         result.healthy = false
-        result.qdrant.error = message(error)
+        result.vector_store.error = message(error)
       }
       return result
     }
@@ -104,7 +110,7 @@ export function registerKnowledgeTools(
     parameters: {
       type: 'object',
       properties: {
-        query: { type: 'string' }, workspace_id: { type: 'string', default: 'default' },
+        query: { type: 'string' }, workspace_id: { type: 'string', default: DEFAULT_WORKSPACE_ID },
         top_k: { type: 'number', default: 3 }, project_code: { type: 'string' },
         function_domain: { type: 'string' }, powertrain_type: { type: 'string' },
         status: { type: 'string' }, approved_only: { type: 'boolean', default: false }
@@ -121,7 +127,7 @@ export function registerKnowledgeTools(
     parameters: {
       type: 'object',
       properties: {
-        workspace_id: { type: 'string', default: 'default' }, document_id: { type: 'string' },
+        workspace_id: { type: 'string', default: DEFAULT_WORKSPACE_ID }, document_id: { type: 'string' },
         version_id: { type: 'string' }, include_sub_functions: { type: 'boolean', default: true },
         include_fields: { type: 'boolean', default: true }, max_tokens: { type: 'number', default: 12000 }
       },
@@ -137,7 +143,7 @@ export function registerKnowledgeTools(
     parameters: {
       type: 'object',
       properties: {
-        workspace_id: { type: 'string', default: 'default' }, document_id: { type: 'string' },
+        workspace_id: { type: 'string', default: DEFAULT_WORKSPACE_ID }, document_id: { type: 'string' },
         version_id: { type: 'string' }, task_goal: { type: 'string' },
         target_context: { type: 'object' }, target_fields: { type: 'array', items: { type: 'string' } },
         max_tokens: { type: 'number', default: 12000 }
@@ -198,10 +204,10 @@ export function registerKnowledgeTools(
 
 async function searchBundles(config: KnowledgeConfig, dependencies: KnowledgeDependencies, args: SearchArgs) {
   requireText(args.query, 'query', 4000)
-  const workspaceId = args.workspace_id || 'default'
+  const workspaceId = args.workspace_id || DEFAULT_WORKSPACE_ID
   const topK = bounded(args.top_k ?? 3, 1, 20, 'top_k')
   const [vector] = await dependencies.embed([args.query])
-  const response: any = await dependencies.qdrant().query(config.vectorCollection, {
+  const response = await dependencies.qdrant().query(config.vectorCollection, {
     query: vector,
     filter: { must: [{ key: 'workspace_id', match: { value: workspaceId } }] },
     limit: Math.max(50, topK * 10),
@@ -225,7 +231,7 @@ async function searchBundles(config: KnowledgeConfig, dependencies: KnowledgeDep
   const candidates: any[] = []
   for (const group of groups.values()) {
     const p = group.payload
-    const [rows] = await dependencies.db().execute<mysql.RowDataPacket[]>(
+    const [rows] = await dependencies.db().execute<RowDataPacket[]>(
       `SELECT d.title, v.project_code, v.platform, v.architecture, v.powertrain_type,
               v.function_domain, v.status, v.approved_for_reuse, s.original_name, s.source_uri
        FROM kb_documents d JOIN kb_document_versions v ON v.document_id = d.id
@@ -234,7 +240,7 @@ async function searchBundles(config: KnowledgeConfig, dependencies: KnowledgeDep
       [workspaceId, p.document_id, p.version_id]
     )
     if (!rows.length) continue
-    const row = rows[0]
+    const row = rows[0] as any
     if (args.project_code && row.project_code !== args.project_code) continue
     if (args.function_domain && row.function_domain !== args.function_domain) continue
     if (args.powertrain_type && row.powertrain_type !== args.powertrain_type) continue
@@ -261,11 +267,11 @@ async function searchBundles(config: KnowledgeConfig, dependencies: KnowledgeDep
 }
 
 async function loadBundle(config: KnowledgeConfig, dependencies: KnowledgeDependencies, args: BundleArgs) {
-  const workspaceId = args.workspace_id || 'default'
+  const workspaceId = args.workspace_id || DEFAULT_WORKSPACE_ID
   requireId(args.document_id, 'document_id')
   requireId(args.version_id, 'version_id')
   const maxTokens = bounded(args.max_tokens ?? 12000, 256, 100000, 'max_tokens')
-  const [rows] = await dependencies.db().execute<mysql.RowDataPacket[]>(
+  const [rows] = await dependencies.db().execute<RowDataPacket[]>(
     `SELECT d.title, v.version_label, v.project_code, v.platform, v.architecture,
             v.powertrain_type, v.function_domain, v.status, v.approved_for_reuse,
             s.original_name, s.source_uri
@@ -275,29 +281,28 @@ async function loadBundle(config: KnowledgeConfig, dependencies: KnowledgeDepend
     [workspaceId, args.document_id, args.version_id]
   )
   if (!rows.length) throw new Error('BUNDLE_NOT_FOUND: 未找到指定知识文档版本')
-  const points: any[] = []
-  let offset: any = undefined
-  do {
-    const page: any = await dependencies.qdrant().scroll(config.vectorCollection, {
-      filter: { must: [
-        { key: 'workspace_id', match: { value: workspaceId } },
-        { key: 'document_id', match: { value: args.document_id } },
-        { key: 'version_id', match: { value: args.version_id } }
-      ] },
-      limit: 100,
-      offset,
-      with_payload: true,
-      with_vector: false
-    })
-    points.push(...(page.points || []))
-    offset = page.next_page_offset
-  } while (offset != null && points.length < 2000)
+
+  // SQLite doesn't have scroll API, we'll query all points for this document
+  const vectorResponse = await dependencies.qdrant().query(config.vectorCollection, {
+    query: new Array(config.embeddingDimension).fill(0), // dummy query to get all
+    filter: { must: [
+      { key: 'workspace_id', match: { value: workspaceId } },
+      { key: 'document_id', match: { value: args.document_id } },
+      { key: 'version_id', match: { value: args.version_id } }
+    ] },
+    limit: 2000,
+    with_payload: true
+  })
+
+  const points = vectorResponse.points || []
   if (!points.length) throw new Error('BUNDLE_NOT_FOUND: 指定版本没有可用索引片段')
-  const row = rows[0]
+
+  const row = rows[0] as any
   let usedCharacters = 0
   const characterBudget = maxTokens * 4
   let truncated = false
   const fields: any[] = []
+
   for (const point of points.sort((a, b) => Number(a.payload?.position || 0) - Number(b.payload?.position || 0))) {
     const payload = point.payload || {}
     let text = String(payload.text || payload.content || '')
@@ -315,6 +320,7 @@ async function loadBundle(config: KnowledgeConfig, dependencies: KnowledgeDepend
     })
     if (truncated) break
   }
+
   const bundle = {
     bundle_id: `${args.document_id}:${args.version_id}`,
     workspace_id: workspaceId,

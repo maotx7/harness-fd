@@ -34,6 +34,7 @@ rm -f "$PROFILE_DIR/pnpm-workspace.yaml.bak"
 
 "$PNPM_BIN" exec dsh plugin --profile "$PROFILE_NAME" add \
   "$PROJECT_ROOT/packages/workspace/plugin-auth" \
+  "$PROJECT_ROOT/packages/workspace/plugin-ui-customization" \
   "$PROJECT_ROOT/packages/workspace/plugin-kb-search" \
   "$PROJECT_ROOT/packages/workspace/plugin-signal-query" \
   "$PROJECT_ROOT/packages/workspace/plugin-workflow-mgmt"

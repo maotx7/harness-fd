@@ -15,7 +15,8 @@ Thumbs.db
 
 # DeepSeek Harness local runtime (source profiles live in /profiles)
 /.dsh/
-/node_modules/
+**/node_modules/
+/data/
 
 bots/*/.env
 
@@ -56,6 +57,13 @@ storage/
 uploads/
 outputs/
 runtime/
+/backups/
+*.bak
+# Stale TypeScript emit from legacy in-place builds
+/packages/workspace/plugin-kb-search/src/sqlite-db.js
+/packages/workspace/plugin-kb-search/src/sqlite-db.js.map
+/packages/workspace/plugin-kb-search/src/sqlite-db.d.ts
+/packages/workspace/plugin-kb-search/src/sqlite-db.d.ts.map
 
 # Test and tool caches
 .pytest_cache/

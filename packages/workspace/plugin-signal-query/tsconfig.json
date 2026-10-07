@@ -11,5 +11,5 @@
     "module": "ESNext",
     "moduleResolution": "bundler"
   },
-  "include": ["src/**/*"]
+  "include": ["src/index.ts", "src/signal-tools-sqlite.ts", "src/client.tsx", "src/types.d.ts"]
 }

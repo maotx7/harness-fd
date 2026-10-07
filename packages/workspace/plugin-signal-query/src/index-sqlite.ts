@@ -6,82 +6,8 @@ import { createHash, randomUUID } from 'node:crypto'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import * as XLSX from 'xlsx'
-import Database from 'better-sqlite3'
 import { registerSignalTools } from './signal-tools-sqlite.js'
-
-// 简化的 SqlitePool 类（内嵌）
-class SqlitePool {
-  private db: Database.Database
-
-  constructor(connectionString: string) {
-    const dbPath = connectionString.replace(/^sqlite:\/\/\//, '')
-    this.db = new Database(dbPath)
-    this.db.pragma('journal_mode = WAL')
-    this.db.pragma('foreign_keys = ON')
-  }
-
-  async execute<T = any[]>(sql: string, params: any[] = []): Promise<[T, any]> {
-    const sqliteSql = sql.replace(/NOW\(\)/g, Date.now().toString())
-
-    if (sql.trim().toUpperCase().startsWith('SELECT')) {
-      const rows = this.db.prepare(sqliteSql).all(...params)
-      return [rows as T, {}]
-    }
-
-    if (sql.trim().toUpperCase().startsWith('DELETE')) {
-      const result = this.db.prepare(sqliteSql).run(...params)
-      return [[] as T, { affectedRows: result.changes }]
-    }
-
-    const result = this.db.prepare(sqliteSql).run(...params)
-    return [[] as T, { affectedRows: result.changes, insertId: result.lastInsertRowid }]
-  }
-
-  async getConnection(): Promise<SqliteConnection> {
-    return new SqliteConnection(this.db)
-  }
-
-  async end(): Promise<void> {
-    this.db.close()
-  }
-}
-
-class SqliteConnection {
-  private inTransaction = false
-
-  constructor(private db: Database.Database) {}
-
-  async beginTransaction(): Promise<void> {
-    this.db.prepare('BEGIN TRANSACTION').run()
-    this.inTransaction = true
-  }
-
-  async commit(): Promise<void> {
-    this.db.prepare('COMMIT').run()
-    this.inTransaction = false
-  }
-
-  async rollback(): Promise<void> {
-    this.db.prepare('ROLLBACK').run()
-    this.inTransaction = false
-  }
-
-  async execute<T = any[]>(sql: string, params: any[] = []): Promise<[T, any]> {
-    const sqliteSql = sql.replace(/NOW\(\)/g, Date.now().toString())
-
-    if (sql.trim().toUpperCase().startsWith('SELECT')) {
-      const rows = this.db.prepare(sqliteSql).all(...params)
-      return [rows as T, {}]
-    }
-
-    const result = this.db.prepare(sqliteSql).run(...params)
-    return [[] as T, { affectedRows: result.changes }]
-  }
-
-  release(): void {
-    // SQLite 不需要释放连接
-  }
-}
+import { SqlitePool } from '../../plugin-kb-search/src/sqlite-db.js'
 
 export const name = 'signal-data-query'
 export const inject = ['tools', 'webServer']

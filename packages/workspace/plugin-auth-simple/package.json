@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/plugin-workflow-mgmt",
+  "name": "@workspace/plugin-auth-simple",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,10 +10,8 @@
   },
   "dependencies": {
     "@deepseek-ai/cordis": "4.0.4",
-    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
-    "@deepseek-ai/schemastery": "3.18.4",
-    "better-sqlite3": "^11.0.0",
-    "mysql2": "^3.6.5"
+    "@deepseek-ai/dsh-host-webserver": "0.2.0-rc.2",
+    "@deepseek-ai/schemastery": "3.18.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

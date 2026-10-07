@@ -8,7 +8,6 @@ PROFILE_NAME="workspace-enterprise"
 PROFILE_SOURCE="$PROJECT_ROOT/profiles/$PROFILE_NAME"
 DSH_HOME="${DSH_HOME:-$HOME/.dsh}"
 PROFILE_DIR="$DSH_HOME/profiles/$PROFILE_NAME"
-PROFILE_ENV="$PROFILE_DIR/.env"
 PNPM_BIN="$(command -v pnpm || true)"
 
 if [[ -z "$PNPM_BIN" ]]; then
@@ -34,30 +33,24 @@ node "$PROJECT_ROOT/scripts/merge-profile-patch.mjs" \
   "$PROFILE_SOURCE/cordis.patch.yml" \
   "$PROFILE_DIR/cordis.patch.yml"
 
-if [[ ! -r "$PROFILE_ENV" ]]; then
-  PROFILE_ENV="$PROFILE_SOURCE/.env"
-fi
-
-if [[ ! -r "$PROFILE_ENV" ]]; then
-  echo "DSH profile environment not found." >&2
+if [[ ! -r "$ROOT_ENV" ]]; then
+  echo "Project environment not found: $ROOT_ENV" >&2
+  echo "Copy .env.example to .env and fill in the required values." >&2
   exit 1
 fi
 
 set -a
-if [[ -r "$ROOT_ENV" ]]; then
-  # shellcheck disable=SC1090
-  source "$ROOT_ENV"
-fi
 # shellcheck disable=SC1090
-source "$PROFILE_ENV"
+source "$ROOT_ENV"
 set +a
 
-for name in MYSQL_URL QDRANT_URL EMBEDDING_BASE_URL EMBEDDING_API_KEY EMBEDDING_MODEL EMBEDDING_DIMENSION; do
+for name in MYSQL_URL JWT_SECRET SIGNATURE_SECRET USER_DATA_ROOT EMBEDDING_BASE_URL EMBEDDING_API_KEY EMBEDDING_MODEL EMBEDDING_DIMENSION DEEPSEEK_API_KEY; do
   if [[ -z "${!name:-}" ]]; then
-    echo "$name is missing from $ROOT_ENV and $PROFILE_ENV" >&2
+    echo "$name is missing from $ROOT_ENV" >&2
     exit 1
   fi
 done
 
 cd "$PROJECT_ROOT"
+node "$PROJECT_ROOT/scripts/migrate-runtime-databases.mjs"
 exec "$PNPM_BIN" exec dsh --profile "$PROFILE_NAME" "$@"

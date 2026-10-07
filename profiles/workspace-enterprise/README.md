@@ -1,74 +1,37 @@
 # Workspace Enterprise Profile
 
-企业级工作区 Profile，集成认证、知识库、信号查询、工作流管理四大插件。
+本目录是 `workspace-enterprise` DSH profile 的可提交配置源码。修改 profile 时提交本目录的配置，不要直接修改 DSH 自动生成的运行态文件。
 
-## 目录职责
+## 文件职责
 
-- 本目录是 Profile 配置的唯一源码，配置变更应提交到这里。
-- `${DSH_HOME:-~/.dsh}/profiles/workspace-enterprise` 是 DSH 管理的运行态，包含独立的 `package.json`、锁文件和 `node_modules`。
-- `scripts/start-dsh.sh` 启动前会将本目录的 Cordis 配置同步到运行态，但不会覆盖运行态的 `.env`、依赖或锁文件。
-- 项目根 `node_modules` 用于 monorepo 开发，Profile 的 `node_modules` 用于 DSH 插件隔离解析，二者不能直接合并。
+- `cordis.yml`：基础 Cordis 配置入口；当前保持为空，插件由 patch 组合。
+- `cordis.patch.yml`：插件、插件配置、模型和技能目录的实际声明。
+- `cordis.schema.json`：Cordis 配置结构校验 schema。
+- 环境变量统一维护在仓库根目录 `.env`；模板见根目录 `.env.example`。
 
-首次安装或显式删除运行态后，执行：
+## 运行态
 
-```bash
-bash scripts/setup-dsh-profile.sh
-```
+`scripts/setup-dsh-profile.sh` 首次创建 `${DSH_HOME:-~/.dsh}/profiles/workspace-enterprise` 并安装 DSH 与本仓库插件。项目根 `node_modules` 用于 workspace 开发；profile 下的 `node_modules` 是 DSH 运行时依赖，两者独立。
 
-## 插件列表
+启动时 `scripts/start-dsh.sh` 将本目录的 `cordis.yml`、`cordis.schema.json` 同步到运行态，并将 `cordis.patch.yml` 合并到运行态 patch。环境变量只从项目根 `.env` 加载。不要手动编辑运行态配置来持久化变更。
 
-### 1. plugin-auth
-- **功能**：JWT 认证、租户隔离、会话管理
-- **工具**：
-  - `authenticate_user` - 用户认证
-  - `verify_workspace_access` - 工作区权限验证
+## 插件组成
 
-### 2. plugin-kb-search
-- **功能**：知识库文档检索和上传
-- **工具**：
-  - `search_knowledge_base` - 语义搜索
-  - `upload_document_to_kb` - 文档索引
+- `plugin-auth`：现有认证插件，仍依赖 MySQL；认证存储还没有迁移到 SQLite。
+- `plugin-kb-search`：知识库上传、文档处理、embedding 和语义搜索；SQLite 存储向量，原文件本地保存。
+- `plugin-signal-query`：信号矩阵查询，使用 SQLite。
+- `plugin-workflow-mgmt`：工作流管理，使用 SQLite。
+- `plugin-ui-customization`：打包并注入 `client/styles/custom-ui.css`。
 
-### 3. plugin-signal-query
-- **功能**：车辆特征信号数据查询
-- **工具**：
-  - `query_vehicle_signals` - 信号查询
-  - `get_signal_definition` - 信号定义
-
-### 4. plugin-workflow-mgmt
-- **功能**：工作流任务编排和执行
-- **工具**：
-  - `create_workflow` - 创建工作流
-  - `execute_workflow` - 执行工作流
-  - `get_workflow_status` - 查询状态
-
-## 环境变量
-
-复制 `.env.example` 为 `.env` 并配置：
+## 配置与启动
 
 ```bash
+# 在仓库根目录首次安装
 cp .env.example .env
-```
-
-必填项：
-- `MYSQL_URL` - 数据库连接
-- `JWT_SECRET` - JWT 密钥
-- `QDRANT_URL` - 向量数据库
-- `REDIS_URL` - Redis 地址
-- `DEEPSEEK_API_KEY` - DeepSeek API Key
-
-## 启动
-
-```bash
-# 在项目根目录
+# 编辑 .env，填写模型、embedding、认证和数据库所需值
+pnpm setup:dsh
+pnpm build
 pnpm dev:web
 ```
 
-## 测试
-
-```bash
-# 测试认证
-curl -X POST http://localhost:3080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test","password":"test"}'
-```
+变量含义和部署要求见仓库根 [README](../../README.md) 及 [.env.example](../../.env.example)。知识库向量化需要有效的 embedding 服务配置；上传原文件、SQLite 数据库和用户运行文件都应保存在持久化磁盘，且不应提交到 Git。

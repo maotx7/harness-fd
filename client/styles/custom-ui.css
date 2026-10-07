@@ -1,0 +1,26 @@
+/* Hide optional DeepSeek Harness UI controls for this workspace. */
+
+/* Header menu button. */
+.app-header-menu-icon,
+.header-menu-button,
+[class*="menu-icon"],
+[class*="MenuIcon"] {
+  display: none !important;
+}
+
+/* Plugin icons and the plugin menu entry. */
+.sidebar-plugin-icon,
+.plugin-icon,
+[class*="plugin-icon"],
+[class*="PluginIcon"],
+[data-menu="plugins"],
+[class*="plugins-menu"] {
+  display: none !important;
+}
+
+/* Mode selector icon. */
+.mode-selector-icon,
+[class*="mode-icon"],
+[class*="ModeIcon"] {
+  display: none !important;
+}

@@ -3,33 +3,44 @@
 # This patch extends the base DSH profile with custom business logic plugins.
 
 - insert:
+    - id: enterprise-auth
+      name: '@workspace/plugin-auth'
+      config:
+        jwtSecret: !!js process.env.JWT_SECRET
+        mysqlUrl: !!js process.env.MYSQL_URL
+        userDataRoot: !!js process.env.USER_DATA_ROOT || './data/workspace-ai/users'
+        signatureSecret: !!js process.env.SIGNATURE_SECRET
+
     - id: workspace-kb-search
       name: '@workspace/plugin-kb-search'
       config:
-        mysqlUrl: !!js process.env.MYSQL_URL
-        vectorDbUrl: !!js process.env.QDRANT_URL
+        # SQLite 配置（替代 MySQL 和 Qdrant）
+        databasePath: !!js process.env.DATABASE_PATH || './data/harness.db'
+        vectorDbPath: !!js process.env.VECTOR_DB_PATH || './data/vectors.db'
         embeddingBaseUrl: !!js process.env.EMBEDDING_BASE_URL
         embeddingApiKey: !!js process.env.EMBEDDING_API_KEY
         embeddingModel: !!js process.env.EMBEDDING_MODEL
         embeddingDimension: !!js Number(process.env.EMBEDDING_DIMENSION)
-        vectorCollection: !!js process.env.QDRANT_COLLECTION || 'function_def_chunks'
+        vectorCollection: !!js process.env.VECTOR_COLLECTION || 'function_def_chunks'
+        # 本地文件存储配置（替代 MinIO）
         storageBackend: !!js process.env.STORAGE_BACKEND || 'local'
-        minioEndpoint: !!js process.env.MINIO_ENDPOINT
-        minioAccessKey: !!js process.env.MINIO_ACCESS_KEY
-        minioSecretKey: !!js process.env.MINIO_SECRET_KEY
-        minioBucket: !!js process.env.MINIO_BUCKET
-        minioSecure: !!js process.env.MINIO_SECURE === 'true'
+        localStorageRoot: !!js process.env.LOCAL_STORAGE_ROOT || './data/workspace-ai/shared/knowledge'
+        maxUploadSize: !!js Number(process.env.MAX_UPLOAD_SIZE) || 104857600
+
+    - id: workspace-ui-customization
+      name: '@workspace/plugin-ui-customization'
 
     - id: workspace-signal-query
       name: '@workspace/plugin-signal-query'
       config:
-        mysqlUrl: !!js process.env.MYSQL_URL
+        # SQLite 配置（替代 MySQL）
+        databasePath: !!js process.env.DATABASE_PATH || './data/harness.db'
 
     - id: workspace-workflow-mgmt
       name: '@workspace/plugin-workflow-mgmt'
       config:
-        mysqlUrl: !!js process.env.MYSQL_URL
-        redisUrl: !!js process.env.REDIS_URL
+        # SQLite 配置（替代 MySQL 和 Redis）
+        databasePath: !!js process.env.DATABASE_PATH || './data/harness.db'
 - id: ui-settings-general
   name: '@deepseek-ai/dsh-client-ui-settings-general'
   config:
@@ -44,3 +55,6 @@
     provider: deepseek-official
     model: deepseek-v4-pro
     reasoningEffort: high
+# 禁用插件管理器UI（如果不需要插件菜单）
+- id: ui-plugin-manager
+  disabled: true

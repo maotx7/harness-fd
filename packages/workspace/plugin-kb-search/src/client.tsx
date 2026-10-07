@@ -4,6 +4,11 @@ import { BookOpen, RefreshCw, Trash2, Upload } from 'lucide-react'
 export const name = 'knowledge-base-ui'
 export const inject = ['slots', 'layout']
 
+// Keep the workspace UI neutral while preserving the host layout. These are
+// official DSH brand slots, so replacing them is more stable than targeting
+// generated CSS module class names.
+const EmptyBrandMark = () => null
+
 interface DocumentSummary {
   id: string
   title: string
@@ -16,6 +21,15 @@ interface DocumentSummary {
 }
 
 export function apply(ctx: any) {
+  ctx.slots.inject('sidebar.brand.mark', () => ctx.slots.register(
+    { name: 'sidebar.brand.mark' },
+    EmptyBrandMark,
+  ))
+  ctx.slots.inject('conversation.hero.brand.mark', () => ctx.slots.register(
+    { name: 'conversation.hero.brand.mark' },
+    EmptyBrandMark,
+  ))
+
   ctx.slots.inject('main', function* () {
     yield ctx.slots.register({ name: 'main', key: 'knowledge-base' }, KnowledgeBasePanel)
   })
